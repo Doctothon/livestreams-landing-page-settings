@@ -1,0 +1,435 @@
+version: 2.1
+
+parameters:
+  admin_task:
+    type: enum
+    enum: [delete_oci_image, blank]
+    default: blank
+  secrethub_org:
+    type: string
+    default: "doctothon-io"
+    description: "SecretHub Org to use to fetch secrets ?"
+  secrethub_repo:
+    type: string
+    default: "cicd"
+    description: "SecretHub Repo to use to fetch secrets ?"
+  oci_image_tag:
+    type: string
+    default: "develop-cms"
+    description: "What is the container tag of the contaienr image to delete from doctothon-io 's Quay.io Container registry ?"
+orbs:
+  heroku: circleci/heroku@1.2.3
+  docker: circleci/docker@1.5
+  secrethub: secrethub/cli@1.0.0
+jobs:
+  empty_job:
+    docker:
+     - image: alpine
+    resource_class: small
+    working_directory: /mnt/ramdisk
+    steps:
+      - run:
+          name: "This is a blank job"
+          command: echo "No task is executed."
+  container_images_publish:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+      resource_class: medium
+    environment:
+      SECRETHUB_ORG: << pipeline.parameters.secrethub_org >>
+      SECRETHUB_REPO: << pipeline.parameters.secrethub_repo >>
+    steps:
+      - checkout
+      - secrethub/install
+      - docker/install-docker-compose
+      - run:
+          name: "Container images build for the CMS env."
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            source .cms.env
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+            export GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+            export CICD_BUILD_ID=$CIRCLE_BUILD_NUM
+            export CICD_BUILD_TIMESTAMP=$(date --rfc-3339 seconds)
+            echo "GIT_COMMIT_ID=${GIT_COMMIT_ID}" | tee -a .cms.env
+            echo "CICD_BUILD_ID=${CICD_BUILD_ID}" | tee -a .cms.env
+            echo "CICD_BUILD_TIMESTAMP='${CICD_BUILD_TIMESTAMP}'" | tee -a .cms.env
+            source .cms.env
+            # ---
+            # interpolation of build args (don't know why seems necessary in Circle CI and
+            # not on my machines, maybe different versions of docker-compose)
+            # ---
+            sed -i "s#ALPINE_OCI_IMAGE_TAG=.*#ALPINE_OCI_IMAGE_TAG=${ALPINE_OCI_IMAGE_TAG}#g" docker-compose.cms.build.yml
+            sed -i "s#GOLANG_VERSION=.*#GOLANG_VERSION=${GOLANG_VERSION}#g" docker-compose.cms.build.yml
+            sed -i "s#HUGO_VERSION=.*#HUGO_VERSION=${HUGO_VERSION}#g" docker-compose.cms.build.yml
+            sed -i "s#GIT_COMMIT_ID=.*#GIT_COMMIT_ID=${GIT_COMMIT_ID}#g" docker-compose.cms.build.yml
+            sed -i "s#CICD_BUILD_ID=.*#CICD_BUILD_ID=${CICD_BUILD_ID}#g" docker-compose.cms.build.yml
+            sed -i "s#CICD_BUILD_TIMESTAMP=.*#CICD_BUILD_TIMESTAMP=${CICD_BUILD_TIMESTAMP}#g" docker-compose.cms.build.yml
+            sed -i "s#QUAY_OCI_IMAGE_TAG=.*#QUAY_OCI_IMAGE_TAG=${QUAY_OCI_IMAGE_TAG}#g" docker-compose.cms.build.yml
+            sed -i "s#image: quay.io/ricardio/website:.*#image: quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}#g" docker-compose.cms.build.yml
+            # ---
+            echo "# --------------------------------------------------------------------------- #"
+            echo "# -------   DOCKER COMPOSE CONFIG : "
+            echo "# --------------------------------------------------------------------------- #"
+            docker-compose -f ./docker-compose.cms.build.yml config
+            echo "# --------------------------------------------------------------------------- #"
+            docker-compose -f ./docker-compose.cms.build.yml build hugo_cms
+            # and now [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] should exists among [docker images]
+            docker images
+
+      - run:
+          name: "Container images push to Quay.io for the CMS image"
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            echo "SECRETHUB_ORG=[${SECRETHUB_ORG}]"
+            echo "SECRETHUB_REPO=[${SECRETHUB_REPO}]"
+            QUAY_BOT_USERNAME=$(secrethub read ${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/oci/quay-io/user-name)
+            QUAY_BOT_SECRET=$(secrethub read ${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/oci/quay-io/user-pwd)
+            echo "QUAY_BOT_USERNAME=[${QUAY_BOT_USERNAME}]"
+            # echo "QUAY_BOT_SECRET=[${QUAY_BOT_SECRET}]"
+            docker login -u="${QUAY_BOT_USERNAME}" -p="${QUAY_BOT_SECRET}" quay.io
+            source .cms.env
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+            export GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+            export CICD_BUILD_ID=$CIRCLE_BUILD_NUM
+            export OCI_IMAGE_GUN="quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}"
+            export CICD_BUILD_TIMESTAMP=$(docker inspect --format '{{ index .Config.Labels "io.doctothon-io.cicd.build.timestamp"}}' "${OCI_IMAGE_GUN}")
+            echo "GIT_COMMIT_ID=[${GIT_COMMIT_ID}]"
+            echo "CICD_BUILD_ID=[${CICD_BUILD_ID}]"
+            echo "CICD_BUILD_TIMESTAMP=[${CICD_BUILD_TIMESTAMP}]"
+            docker tag "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}" "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}-latest"
+            docker push "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}"
+            docker push "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}-latest"
+      - run:
+          name: "Container images build for the Heroku Deployment: Hugo Build (checking no hugo build error occurs)"
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            export GIT_RELEASE_TAG=$(git describe --tags --abbrev=0)
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-heroku
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+            source .heroku.env
+            export GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+            export CICD_BUILD_ID=$CIRCLE_BUILD_NUM
+            export CICD_BUILD_TIMESTAMP=$(date --rfc-3339 seconds)
+            echo "GIT_COMMIT_ID=${GIT_COMMIT_ID}" | tee -a .heroku.env
+            echo "CICD_BUILD_ID=${CICD_BUILD_ID}" | tee -a .heroku.env
+            echo "CICD_BUILD_TIMESTAMP='${CICD_BUILD_TIMESTAMP}'" | tee -a .heroku.env
+            source .heroku.env
+            docker-compose -f ./docker-compose.heroku.build.yml build hugo_heroku
+            # and now [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] should exists among [docker images]
+            docker images
+
+      - run:
+          name: "Container images push to Quay.io for the Heroku Deployment"
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            echo "SECRETHUB_ORG=[${SECRETHUB_ORG}]"
+            echo "SECRETHUB_REPO=[${SECRETHUB_REPO}]"
+            QUAY_BOT_USERNAME=$(secrethub read ${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/oci/quay-io/user-name)
+            QUAY_BOT_SECRET=$(secrethub read ${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/oci/quay-io/user-pwd)
+            echo "QUAY_BOT_USERNAME=[${QUAY_BOT_USERNAME}]"
+            # echo "QUAY_BOT_SECRET=[${QUAY_BOT_SECRET}]"
+            docker login -u="${QUAY_BOT_USERNAME}" -p="${QUAY_BOT_SECRET}" quay.io
+            export GIT_RELEASE_TAG=$(git describe --tags --abbrev=0)
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-heroku
+            docker tag "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}" "quay.io/ricardio/website:stable-latest"
+            echo "checking [date time] (sometimes data time in Circle CI pipelines is wrong, so that Container registry rejects the [docker push]...)"
+            echo "date time in Circle CI Pipeline is [$(date)] "
+            date
+            docker push "quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}"
+            docker push "quay.io/ricardio/website:stable-latest"
+
+  deploy_to_heroku:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+      resource_class: medium
+    environment:
+      SECRETHUB_ORG: << pipeline.parameters.secrethub_org >>
+      SECRETHUB_REPO: << pipeline.parameters.secrethub_repo >>
+      HEROKU_APP_ID: "doctothon-io"
+    steps:
+      - checkout
+      - secrethub/install
+      - heroku/install
+      - run:
+          name: "Heroku Check Authentication"
+          command: |
+            echo "Checking Heroku Authentication is successful, with the secrethub provided Heroku API Token"
+            echo "Checking context variables from [doctothon-io-cicd] context"
+            echo "Checking Circle CI Job env. variables"
+            echo "SECRETHUB_ORG=[${SECRETHUB_ORG}]"
+            echo "SECRETHUB_REPO=[${SECRETHUB_REPO}]"
+            echo "HEROKU_APP_ID=[${HEROKU_APP_ID}]"
+            # that's just to check how to
+            export HEROKU_API_KEY=$(secrethub read "${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/heroku/api-token")
+            heroku auth:whoami
+      - run:
+          name: "Set Heroku Stack to [container]"
+          command: |
+            echo "Initializing Heroku Git repo"
+            export HEROKU_API_KEY=$(secrethub read "${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/heroku/api-token")
+            heroku git:remote -a $HEROKU_APP_ID
+            heroku stack:set container --app $HEROKU_APP_ID
+      - run:
+          name: "Pulling Container Image built for the Heroku Deployment"
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            echo "SECRETHUB_ORG=[${SECRETHUB_ORG}]"
+            echo "SECRETHUB_REPO=[${SECRETHUB_REPO}]"
+            export GIT_RELEASE_TAG=$(git describe --tags --abbrev=0)
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-heroku
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+            docker pull quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}
+            # [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] should now be among local [docker images]
+      - run:
+          name: "Deploy to Heroku by docker pushing container image, website at https://doctothon-io.herokuapp.com/ "
+          command: |
+            echo "Deploying to Heroku, by pushing the built docker image, and release it using the Heroku API"
+            # the process type, is the thing that you can find in the `heroku.yml` (for me it's `web`, and
+            # there are others, which I don't care about like for backends I guess, stuff like that)
+            export HEROKU_PROCESS_TYPE=web
+            export SECRETHUB_ORG=doctothon-io
+            export SECRETHUB_REPO=cicd
+            export HEROKU_API_KEY=$(secrethub read "${SECRETHUB_ORG}/${SECRETHUB_REPO}/ricard_io_bot/heroku/api-token")
+
+            docker login --username=_ --password=${HEROKU_API_KEY} registry.heroku.com
+            export GIT_RELEASE_TAG=$(git describe --tags --abbrev=0)
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-heroku
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+
+            docker tag quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG} registry.heroku.com/${HEROKU_APP_ID}/${HEROKU_PROCESS_TYPE}
+            docker push registry.heroku.com/${HEROKU_APP_ID}/${HEROKU_PROCESS_TYPE}
+
+            # ---
+            # After the image is pushed, you have one more thing to do, to complete the deployment.
+            # This "thing" consists of invoking one Heroku API Endpoint, to "release" the pushed container.
+            # The Heroku API Endpoint is [/apps/$HEROKU_APP_ID/formation]: it is supposed to
+            # "release a contgaienr image". Odd name for an endpoint supposed to do that...
+            # ---
+            # To invoke the Heroku API Endpoint, I need one container
+            # meta data, obtained by [docker inspect ${DOCKER_IMAGE_GUN} --format={{.Id}}]
+            # ---
+            # To be absolutely sure, I get this metadata from the exact docker image pushed to Heroku Container Regsitry, I
+            # remove all local container images, and then pull again the pushed image of the deployment.
+            # ---
+
+            docker system prune -f --all && docker system prune -f --volumes
+            export DOCKER_IMAGE_GUN=registry.heroku.com/${HEROKU_APP_ID}/${HEROKU_PROCESS_TYPE}
+            docker pull ${DOCKER_IMAGE_GUN}
+            export DOCKER_IMAGE_ID=$(docker inspect ${DOCKER_IMAGE_GUN} --format={{.Id}})
+            # ---
+            # And now I have all I need to invoke the Heroku API Endpoint :
+            # ---
+            curl -iv -H "Authorization: Bearer ${HEROKU_API_KEY}" -X PATCH https://api.heroku.com/apps/$HEROKU_APP_ID/formation \
+              -d "{
+              \"updates\": [
+                {
+                  \"type\": \"${HEROKU_PROCESS_TYPE}\",
+                  \"docker_image\": \"${DOCKER_IMAGE_ID}\"
+                }
+              ]
+            }" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/vnd.heroku+json; version=3.docker-releases"
+
+  deliver_content_job:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+      resource_class: medium
+    steps:
+      - checkout
+      - secrethub/install
+      - docker/install-docker-compose
+
+      - run:
+          name: "Content Management: Deliver Content (Docker build and push the ilmage from the work branch)"
+          command: |
+            export GIT_RELEASE_TAG=$(echo "${GIT_BRANCH_NAME}" | sed "s#\/#_#g")
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-cms
+            echo "# ---"
+            echo "# Triggered every time a content writer git pushes"
+            echo "# the "READY_${CONTENT_ALIAS}_${USERNAME_ALIAS}" git tag to"
+            echo "# submit his work: Docker builds and push the [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] docker image of"
+            echo "# the work done by the conributor."
+            echo "# ---"
+            echo "Not implemented yet"
+            exit 1
+      - run:
+          name: "Content Management: Deliver Content (create the Pull Request)"
+          command: |
+            echo "# ---"
+            echo "# Triggered every time a content writer git pushes"
+            echo "# the "READY_${CONTENT_ALIAS}_${USERNAME_ALIAS}" git tag to"
+            echo "# submit his work: then octokit will create a PR to develop"
+            echo "# In the PR description, will be added : "
+            echo "# 1./ command to run the docker compose with the [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] docker image, to verify the work done by the contributor"
+            echo "# 2./ command to delete the [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] docker image from Container registry, to clean up Quay.io account (this command will be a curl to launch the Circle CI Pipeline to delete an image)"
+            echo "#      The exact curl command to launch the pipeline will be set with $(cat cms.users.utilities/admin/delete-image.sh)"
+            cat ./cms.users.utilities/admin/delete-image.sh
+            echo "# ---"
+            echo "Not implemented yet"
+            exit 1
+
+  delete_oci_image_job:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+      resource_class: medium
+    environment:
+      OCI_IMAGE_TAG: << pipeline.parameters.oci_image_tag >>
+    steps:
+      - checkout
+      - secrethub/install
+      - docker/install-docker-compose
+      - run:
+          name: "Content Management: Hugo Build (checking no hugo build error occurs)"
+          command: |
+            echo "Here commands to delete an image from the container registry"
+            echo "Not implemented yet"
+            exit 1
+
+
+  content_mgmt_job:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+      resource_class: medium
+    steps:
+      - checkout
+      - secrethub/install
+      - docker/install-docker-compose
+      - run:
+          name: "Content Management: Hugo Build (checking no hugo build error occurs)"
+          command: |
+            echo "Checking Circle CI Job env. variables"
+            export GIT_BRANCH_NAME=$(git branch -a | grep '*' | awk '{print $2}')
+            export GIT_RELEASE_TAG=$(echo "${GIT_BRANCH_NAME}" | sed "s#\/#_#g")
+            export QUAY_OCI_IMAGE_TAG=${GIT_RELEASE_TAG}-cms
+            echo "QUAY_OCI_IMAGE_TAG=[${QUAY_OCI_IMAGE_TAG}]"
+            source .heroku.env
+            export GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+            export CICD_BUILD_ID=$CIRCLE_BUILD_NUM
+            export CICD_BUILD_TIMESTAMP=$(date --rfc-3339 seconds)
+            export CICD_BUILD_TIMESTAMP=$(date)
+            echo "GIT_COMMIT_ID=${GIT_COMMIT_ID}" | tee -a .heroku.env
+            echo "CICD_BUILD_ID=${CICD_BUILD_ID}" | tee -a .heroku.env
+            echo "CICD_BUILD_TIMESTAMP='${CICD_BUILD_TIMESTAMP}'" | tee -a .heroku.env
+            source .heroku.env
+            docker-compose -f ./docker-compose.heroku.build.yml build hugo_heroku
+            # and now [quay.io/ricardio/website:${QUAY_OCI_IMAGE_TAG}] should exists among [docker images]
+            docker images
+
+
+workflows:
+  version: 2.1
+  build_and_deploy:
+    jobs:
+      - container_images_publish:
+          context: doctothon-io-cicd
+          filters:
+            branches:
+              ignore:
+                # --- git flow
+                - master
+                - develop
+                - /^feature\/.*/
+                - /^support\/.*/
+                - /^bugfix\/.*/
+                - /^hotfix\/.*/
+                - /^release\/.*/
+                # --- CMS
+                - /^content\/.*/
+                # ---
+            tags:
+              only:
+                - /^[0-999].[0-999].[0-999]/
+                - /^[0-999].[0-999].[0-999]-alpha/
+                - /^[0-999].[0-999].[0-999]-beta/
+      - deploy_to_heroku:
+          context: doctothon-io-cicd
+          requires:
+            - container_images_publish
+          filters:
+            branches:
+              ignore:
+                # --- git flow
+                - master
+                - develop
+                - /^feature\/.*/
+                - /^support\/.*/
+                - /^bugfix\/.*/
+                - /^hotfix\/.*/
+                - /^release\/.*/
+                # --- CMS
+                - /^content\/.*/
+                # ---
+            tags:
+              only:
+                - /^[0-999].[0-999].[0-999]/
+                - /^[0-999].[0-999].[0-999]-alpha/
+                - /^[0-999].[0-999].[0-999]-beta/
+  # ---
+  # triggered every time a content writer git pushs to his content branch
+  content_mgmt:
+    jobs:
+      - content_mgmt_job:
+          context: doctothon-io-cicd
+          filters:
+            branches:
+              only:
+                # ---
+                - /^content\/.*/
+                # ---
+  # ---
+  # Triggered every time a content writer git pushes
+  # the "READY_${CONTENT_ALIAS}_${USERNAME_ALIAS}" git tag to
+  # submit his work: then octokit will create a PR to develop
+  # ---
+  deliver_content:
+    jobs:
+      - deliver_content_job:
+          context: doctothon-io-cicd
+          filters:
+            branches:
+              ignore:
+                # --- git flow
+                - master
+                - develop
+                - /^feature\/.*/
+                - /^support\/.*/
+                - /^bugfix\/.*/
+                - /^hotfix\/.*/
+                - /^release\/.*/
+                # --- CMS
+                - /^content\/.*/
+                # ---
+            tags:
+              only:
+                - /^READY_.*/
+
+  delete_oci_image_job:
+    when:
+      equal: [ delete_oci_image, << pipeline.parameters.admin_task >> ]
+    jobs:
+      - delete_oci_image_job:
+          context: doctothon-io-cicd
+  # ---
+  # Blank process invoked by default
+  blank:
+    when:
+      equal: [ blank, << pipeline.parameters.admin_task >> ]
+    jobs:
+      - empty_job:
+          context: doctothon-io-cicd
+          filters:
+            branches:
+              ignore:
+                # --- git flow
+                - master
+                - develop
+                - /^feature\/.*/
+                - /^support\/.*/
+                - /^bugfix\/.*/
+                - /^hotfix\/.*/
+                - /^release\/.*/
+                # --- CMS
+                - /^content\/.*/
+                # ---

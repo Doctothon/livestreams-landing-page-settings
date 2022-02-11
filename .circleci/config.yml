@@ -1,0 +1,138 @@
+version: 2.1
+
+parameters:
+  secrethub_org:
+    type: string
+    default: "doctothon-io"
+    description: "SecretHub Org to use to fetch secrets ?"
+  secrethub_repo:
+    type: string
+    default: "cicd"
+    description: "SecretHub Repo to use to fetch secrets ?"
+  github_pages_folder:
+    type: string
+    default: "cicd"
+    description: "Path of the folder served by Github Pages configuration ? (should be either of '.', './' or the './docs')"
+  github_pages_branch:
+    type: string
+    default: "cicd"
+    description: "Name of the git branch for which Github P£ages is configured ? (defaults to master)"
+  oci_image_tag:
+    type: string
+    default: "develop-cms"
+    description: "What is the container tag of the contaienr image to delete from doctothon-io 's Quay.io Container registry ?"
+orbs:
+  # heroku: circleci/heroku@1.2.3
+  docker: circleci/docker@1.5
+  secrethub: secrethub/cli@1.0.0
+  # https://circleci.com/developer/orbs/orb/antonioned/discord
+  discord: antonioned/discord@0.1.0
+
+jobs:
+  example_job:
+    docker:
+    # - -
+    # Primary container image where all steps run.
+    # - -
+      - cimg/node:lts
+      # - cimg/go:1.17
+      # - image: buildpack-deps:trusty
+    # - -
+    # Secondary container image on common network.
+    # command will execute in [cimg/node:lts] container
+    # and software  in primary container can
+    # access mongo on localhost
+    # - run: sleep 5 && nc -vz localhost 27017
+    # - -
+      - image: mongo:2.6.8-jessie
+        command: mysqld --default-authentication-plugin=mysql_native_password
+        environment:
+          MYSQL_USER: forge
+          MYSQL_DATABASE: forge
+          MYSQL_ROOT_PASSWORD: ''
+          MYSQL_PASSWORD: 'forge'
+    resource_class: medium
+    working_directory: ~/
+    steps:
+      # --
+      #
+      - setup_remote_docker:
+          version: 20.10.11
+          # list of available versions : https://circleci.com/docs/2.0/building-docker-images/#docker-version
+      - run: |
+            echo "Here i can run docker commands"
+            docker version
+            docker images
+            docker pull mongo
+            docker pull alpine
+            docker images
+
+
+  validate_pipeline_params:
+    docker:
+    # - -
+    # Primary container image where all steps run.
+    # - -
+      - image: cimg/node:lts
+        # command: /bin/sh
+        environment:
+          POKUS_USER: pokus_wym
+          POKUS_DATABASE: pokus_wym
+    resource_class: medium
+    environment:
+      GITHUB_PAGES_BRANCH: << pipeline.parameters.github_pages_branch >>
+      GITHUB_PAGES_FOLDER: << pipeline.parameters.github_pages_folder >>
+    working_directory: ~/
+    steps:
+      - checkout
+      - run:
+          name: "system update"
+          command: |
+               apt-get update -y
+      - run:
+          name: "Validate Github pages related pipeline params"
+          command: |
+                echo " < -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ >"
+                echo "  POKUS_USER=[${POKUS_USER}]"
+                echo "  POKUS_DATABASE=[${POKUS_DATABASE}]"
+                echo "  GITHUB_PAGES_BRANCH=[${GITHUB_PAGES_BRANCH}]"
+                echo "  GITHUB_PAGES_FOLDER=[${GITHUB_PAGES_FOLDER}]"
+                echo ""
+                echo " < -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ >"
+                #   '.', './' or the './docs'
+      # --
+      #
+      - setup_remote_docker:
+          version: 20.10.11
+          # list of available versions : https://circleci.com/docs/2.0/building-docker-images/#docker-version
+      - run: |
+            echo "Here i can run docker commands"
+            docker version
+            docker images
+            docker pull mongo
+            docker pull alpine
+            docker images
+
+  check-configjson:
+    docker:
+      - image: cimg/node:lts
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Check if `config.json` is a valid JSON file
+          command: npx jsonlint config.json
+
+# -----------------------------------
+
+workflows:
+  version: 2.1
+  docto_ci_metatest:
+    jobs:
+      - validate_pipeline_params:
+          context: doctothon-io-cicd
+          filters:
+            branches:
+              only:
+                - /^feature\/.*/
+                # ---
