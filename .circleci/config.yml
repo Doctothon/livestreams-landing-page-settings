@@ -67,7 +67,6 @@ jobs:
             docker pull alpine
             docker images
 
-
   validate_pipeline_params:
     docker:
     # - -
