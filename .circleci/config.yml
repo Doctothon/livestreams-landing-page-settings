@@ -129,7 +129,7 @@ workflows:
   docto_ci_metatest:
     jobs:
       - validate_pipeline_params:
-          context: doctothon-io-cicd
+          # context: doctothon-io-cicd
           filters:
             branches:
               only:
