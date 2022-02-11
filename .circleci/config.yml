@@ -134,5 +134,6 @@ workflows:
           filters:
             branches:
               only:
-                - /^feature\/.*/
+                - /^develop/
+                # - /^feature\/.*/
                 # ---
