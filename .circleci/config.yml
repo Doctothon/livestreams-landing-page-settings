@@ -34,7 +34,7 @@ jobs:
     # - -
     # Primary container image where all steps run.
     # - -
-      - cimg/node:lts
+      - image: cimg/node:lts
       # - cimg/go:1.17
       # - image: buildpack-deps:trusty
     # - -
