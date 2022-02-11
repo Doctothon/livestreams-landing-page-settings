@@ -81,7 +81,7 @@ jobs:
     environment:
       GITHUB_PAGES_BRANCH: << pipeline.parameters.github_pages_branch >>
       GITHUB_PAGES_FOLDER: << pipeline.parameters.github_pages_folder >>
-    working_directory: ~/
+    working_directory: ~/project
     steps:
       - checkout
       - run:
