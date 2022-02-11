@@ -85,10 +85,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "system update"
-          command: |
-               apt-get update -y
-      - run:
           name: "Validate Github pages related pipeline params"
           command: |
                 echo " < -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ -+-+ >"
