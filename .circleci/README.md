@@ -39,7 +39,7 @@ From the new commit on the `master` Git branch, the pipeline automates the follo
 
 
 
-## Deployment to production
+## Release
 
 Every commit on the `master` git branch will trigger a deployment to production.
 Conducting a git flow relase will therefore trigger a deployment to production.
@@ -63,29 +63,28 @@ From the new commit on the `master` Git branch, we run the following steps :
 
   * silently finsih the git flow release
 
-##### Deploy to production, without a release ?
+
+## Deploy to production, without a release
 
 All you have to do, is to push a new git commit on the `master` Git branch.
 
-## Release
 
-Conducting a git flow release will push a commit on the `master` git branch, and therefore trigger a deployment to production.
+## Tech Stack, CI Cycle
 
-To run a new release, from the `develop` Git branch, we run the following steps :
+### Frameworks
 
-* build the website, run all tests, and send the test results to global quality gate,
-* calculate the last release version number, and the next :
-  * **release version numbbers must be pure semver**.
-  * and this auto-increment feature allows to not ever have to choose or edit any version number.
-* approve step :
-  * the human checks the quality report, and the value of the next release version number
-  * if all are ok, the human gives approval to complete the release which triggers a deployment to production
-* deployment
-  * start the git flow release
-  * on the `release/X.Y.Z` git branch, the git flow release branch, execute those steps :
-    * build the website for production, **don't run any tests**, and :
-    * delete the `./docs/` folder
-    * recreate empty the `./docs/` folder
-    * put all the generated, tested static website files into  the `./docs/` folder
+No framewortk is used yet, only pure vanilla javascript, HTML and some CSS.
 
-  * silently finsih the git flow release
+Devops guys added a bit of toling to build / package the delivery, with at least a bit of industry standards.
+
+### Build
+
+* Uglifiers
+* PurgeCSS
+* SCSS/SASS support
+
+### Unit Tests
+
+* Linters : CSS, JavaScript
+
+### Integration Tests

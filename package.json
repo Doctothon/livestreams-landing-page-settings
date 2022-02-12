@@ -1,0 +1,37 @@
+{
+  "name": "@pokus/restream-io",
+  "version": "0.0.1",
+  "description": "Well I am an OAuth2 application, that can play with restream.io Rest API (in the name of you)",
+  "main": "index.js",
+  "scripts": {
+    "clean": "npm run clean-logs && rm -fr newman/ && mkdir -p newman/",
+    "test": "echo \"No test have been implemented yet\" && exit 7 ",
+    "dep": "./.npm.scripts/dependencies.sh",
+    "purge-css": "node-sass --recursive src/ --output dist/ --source-map true --source-map-contents --output-style compressed",
+    "build-css": "node-sass --recursive src/ --output dist/ --source-map true --source-map-contents --output-style compressed",
+    "watch-css": "nodemon -e scss -x \"npm run build-css\"",
+    "build": "npm run build-css",
+    "start": "echo \"No start has been implemented yet\"  && exit 127",
+    "clean-logs": "touch ./app.logs && rm ./app.logs && touch ./app.logs",
+    "wlog": "npm run clean-logs && npm run watch 2>&1 | tee -a ./pokus.watch.logs",
+    "serve": "serve ./dist",
+    "start": "npm run serve",
+    "watch": "export DOCTOTHON_BASE_URL=${DOCTOTHON_BASE_URL:-'http://localhost:5000'}  && nodemon --trace-warnings -x \"npm run build-css && npm run \"",
+    "dev": "npm run clean-logs && npm run watch 2>&1 | tee -a ./pokus.watch.logs",
+    "help": "echo \"set OS_DISTRIB to either 'macos' or 'linux'\"  && exit 127"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@decathlon/newman-reporter-pullrequest-decorator": "0.0.11",
+    "mocha": "^9.2.0",
+    "newman": "^5.3.1",
+    "newman-reporter-htmlextra": "^1.22.7",
+    "newman-reporter-htmlextra-and-perf": "^1.22.1",
+    "newman-reporter-json": "^1.0.0",
+    "node-sass": "^7.0.1",
+    "nodemon": "^2.0.15"
+  },
+  "dependencies": {}
+}

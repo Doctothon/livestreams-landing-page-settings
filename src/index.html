@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Diffusion en Live du Doctothon">
+	<meta property="og:title" content="Doctothon Live">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://live.doctothon.org">
+	<meta property="og:description" content="Diffusion en Live du Doctothon.">
+	<title>Doctothon</title>
+	<style type="text/css">
+		body {
+			margin: 0
+		}
+
+		#annonce,
+		#fin,
+		#interaction,
+		#live {
+			display: none;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="annonce">
+		<!-- TODO : remplacer le contenu par la page d'annonce, à la charte -->
+		<h1>Doctothon Live - bientôt</h1>
+		<h2>Diffusion le {!LiveStartDate}</h2>
+		<h3>Multi-diffusion</h3>
+		ici
+		<br />sur <a href="https://www.twitch.tv/doctothon">https://www.twitch.tv/doctothon</a>
+		<!-- ## ajouter youtube -->
+		<!-- ## kid de Odysee ? -->
+		<br /> sur <a href="https://crowdbunker.com/@doctothon">https://crowdbunker.com/@doctothon</a>
+		<br />sur <a href="https://twitter.com/doctothon_live">https://twitter.com/doctothon_live</a>
+		<br />sur <a href="https://www.facebook.com/doctothon">https://www.facebook.com/doctothon</a>
+	</div>
+	<div id="interaction" onclick="interactionClick()">Cliquer ici pour entrer dans le live
+		<!-- ## TODO : mettre un gros bouton, à la charte -->
+	</div>
+	<div id="live">
+	</div>
+	<div id="fin">
+		<!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
+		<h1>Le Doctothon Spécial Enfants est fini</h1>
+		Retrouvez tous les liens de rediffusion sur <a href="https://doctothon.fr">https://doctothon.fr</a>
+		<br />
+		<img src="https://doctothon.fr/affiche.png" width="80%">
+		<!-- TODO : remplacer le contenu par la page de fin, à la charte -->
+	</div>
+
+	<div id="mentions">
+		<hr />
+		<p /><b>Mentions légales</b>
+		<br />Cookies : ce site n'utilise pas de cookies
+		<!-- vérifier ce point-ci -->
+		<br />Données personnelles : ce site ne collecte et n'utilise pas de données personnelles
+		<p />Hébergeur :
+		<br />GitHub Pages (https://pages.github.com/)
+		<br />GitHub, Inc.
+		<br />88 Colin P. Kelly Jr. Street
+		<br />San Francisco, CA 94107
+		<br />United States
+		<br />+1 (877) 448-4820
+	</div>
+</body>
+<script>
+	var config = {
+		etape: -1,
+		interacted: false
+	}; //configuration
+	loadConfig();
+
+	function loadConfig() { //Chargement du fichier json de config
+		var xhr = new XMLHttpRequest();
+		xhr.overrideMimeType("application/json");
+		xhr.open('GET', '/config/config.json?ts=' + parseInt(Date.now() / 50000, 10), true); //ajout d' un timestamp de granularité 50 secondes pour éviter les pb de cache
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if (xhr.status === 200) {
+					var config2 = JSON.parse(xhr.responseText);
+					config.IntroYoutubeVideoId = ""; //on vide car on peut mettre à jour soit par une vidéo soit par une playlist
+					config.IntroYoutubePlaylistId = "";
+					for (var attrname in config2) {
+						config[attrname] = config2[attrname];
+					} //merge pour éviter d'écraser l'étape
+					processConfig();
+				} else setTimeout(loadConfig, 60 * 1000); //en cas d'erreur serveur on retente + tard
+			}
+		};
+		xhr.send(null);
+	}
+
+	function processConfig() {
+		//==== ajustement des éléments de configuration
+		//Convertit les dates en ms pour les comparer ensuite avec les valeurs en ms de la date courante, obtenue par new Date().valueOf()
+		if (typeof config.LiveStartDate == 'string') config.LiveStartDate = Date.parse(config.LiveStartDate); //au format "2019-01-01T00:00:00.000Z"  AAAA-mm-jjThh:mm:jj.000Z
+		if (typeof config.LiveEndDate == 'string') config.LiveEndDate = Date.parse(config.LiveEndDate); //au format "2019-01-01T00:00:00.000Z"  AAAA-mm-jjThh:mm:jj.000Z
+		//Calcul de la date de début de la première partie d'intro, en retranchant IntroDuration (en minutes) au timestamp de début du live
+		config.IntroStartDate = config.LiveStartDate - config.IntroDuration * 1000 * 60;
+		//Calcul de l'iFrame Youtube de la première partie
+		var oldIframe = config.IntroIframe;
+		if (config.IntroYoutubeVideoId != "") { //ex : oCHvSsUu_xs
+			config.IntroIframe = 'https://www.youtube-nocookie.com/embed/' + config.IntroYoutubeVideoId + '?rel=0&controls=0&showinfo=0&autoplay=1&loop=1&playlist=' + config.IntroYoutubeVideoId; //loop ne fonctionne que si on ajoute la video comme playlist
+		} else { //ex : PLxxxxx
+			config.IntroIframe = 'https://www.youtube-nocookie.com/embed/?listType=playlist&list=' + config.IntroYoutubePlaylistId + '&rel=0&controls=0&showinfo=0&autoplay=1&loop=1&showsearch=0&iv_load_policy=3&wmode=transparent';
+		}
+
+		//==== ajustement du comportement selon la configuration
+		var oldEtape = config.etape;
+		var curDate = new Date().valueOf(); //Identification de la date courante en ms.
+		if (curDate < config.IntroStartDate) { //Une diffusion à venir, on n'est pas encore dans l'intro
+			config.etape = 0;
+			if (oldEtape != config.etape) displayAnnonce();
+		} else if (curDate <= config.LiveStartDate) { //On est dans la phase de jeu de l'intro
+			config.etape = 1;
+			if (oldEtape != config.etape || oldIframe != config.IntroIframe) { //si on rentre dans l'intro ou si on est déjà dans l'intro mais la video a changé dans la config
+				if (config.interacted) { //on joue directement l'intro, elle sera en autoplay avec son et loop
+					displayIntro();
+				} else displayInteraction(); //On sollicite une interaction sur la page
+			}
+		} else if (curDate <= config.LiveEndDate) { //On est dans la phase de diffusion du Live
+			config.etape = 2;
+			if (oldEtape != config.etape) {
+				if (config.interacted) { //on joue directement l'intro, elle sera en autoplay avec son et loop
+					displayLive();
+				} else displayInteraction(); //On sollicite une interaction sur la page
+			}
+		} else { //La diffusion est finie, pas de suite prévue
+			config.etape = 3;
+			if (oldEtape != config.etape) displayFin();
+		}
+
+		//==== définition de la prochaine lecture de config via un check d'état toutes les minutes, sauf après le live
+		if (oldEtape != -1 && config.etape != 3 && oldEtape != config.etape) {
+			//Sur changement d'étape, et si pas premier chargement de page, on recharge la config
+			loadConfig();
+		} else { //sinon on réévalue la config toutes les minutes
+			switch (config.etape) {
+				case 0: //étape d'annonce, avant démarrage, checker toutes les 3 minutes est suffisant
+					setTimeout(loadConfig, 3 * 60 * 1000);
+					break;
+				case 1: //pendant l'intro, on vérifie toutes les 2 minutes
+					setTimeout(loadConfig, 2 * 60 * 1000);
+					break;
+				case 2: //pendant le live, on vérifie toutes les 2 minutes
+					setTimeout(loadConfig, 2 * 60 * 1000);
+					break;
+				case 3: //on ne check rien, le live a fini
+					break;
+				default: //autre : ne devrait pas se produire
+					setTimeout(loadConfig, 60 * 1000);
+			}
+		}
+	}
+
+	function displayAnnonce() { //etape=0
+		var dom = document.getElementById('annonce');
+		dom.innerHTML = dom.innerHTML.replace('{!LiveStartDate}', (new Date(config.LiveStartDate)).toLocaleString());
+		dom.style.display = "block";
+		//on s'assure qu'on a masqué les autres étapes (cas de changement d'heure via la config)
+		document.getElementById('interaction').style.display = "none";
+		document.getElementById('live').style.display = "none";
+		document.getElementById('fin').style.display = "none";
+		document.getElementById('mentions').style.display = "block";
+	}
+
+	function displayInteraction() {
+		document.getElementById('annonce').style.display = "none";
+		document.getElementById('interaction').style.display = "block";
+		document.getElementById('live').style.display = "none";
+		document.getElementById('fin').style.display = "none";
+		document.getElementById('mentions').style.display = "block";
+	}
+
+	function displayFin() { //etape=3
+		document.getElementById('annonce').style.display = "none";
+		document.getElementById('interaction').style.display = "none";
+		document.getElementById('live').style.display = "none";
+		document.getElementById('fin').style.display = "block";
+		document.getElementById('mentions').style.display = "block";
+	}
+
+	function interactionClick() {
+		config.interacted = true;
+		document.getElementById('mentions').style.display = "none";
+		switch (config.etape) {
+			case 1: //jouer l'intro
+				displayIntro();
+				break;
+			case 2: //diffuser le live
+				displayLive();
+				break;
+			default: //autre : ne devrait pas se produire
+				console.log('Etape non gérée : ' + config.etape);
+		}
+	}
+
+	function displayIntro() {
+		document.getElementById('interaction').innerHTML = '<' + 'iframe src="' + config.IntroIframe + '" allow="autoplay; fullscreen" width="100%" height="' + window.innerHeight + '"></' + 'iframe>';
+	}
+
+	function displayLive() {
+		document.getElementById('annonce').style.display = "none";
+		document.getElementById('interaction').style.display = "none";
+		document.getElementById('live').style.display = "block";
+		document.getElementById('fin').style.display = "none";
+		//on démarre le live
+		document.getElementById('live').innerHTML = '<iframe loading="lazy" src="https://player.twitch.tv/?channel=doctothon&parent=' + document.location.hostname + '&autoplay=true" width="100%" height="' + window.innerHeight +
+			'" frameborder="0" scrolling="no" allowfullscreen="true"></iframe>';
+	}
+
+	//### déprécié ci-dessous : on ne peut pas streamer Twitter en plein écran
+	function processTwitter(url) {
+		document.getElementById('interaction').innerHTML = '<' + 'blockquote class="twitter-tweet" data-theme="dark" data-align="center" data-dnt="true" data-conversation="none">Loading...<' + 'a href="' + url + '">Please wait</' + 'a></' +
+			'blockquote><' + 'script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></' + 'script>';
+	}
+</script>
+
+</html>

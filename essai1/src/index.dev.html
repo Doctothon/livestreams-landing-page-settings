@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctothon</title>
+  <meta name="description" content="Diffusion en Live du Doctothon">
+  <meta property="og:title" content="Doctothon Live">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://live.doctothon.org">
+  <meta property="og:description" content="Diffusion en Live du Doctothon.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css"/>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+
+  <link rel="stylesheet" href="/css/application.css">
+  <link rel="stylesheet" href="/css/application.native.css">
+
+  <script src="/js/application.js" integrity="sha384-Gz/tjqbm21zfFQ3EvuS5d7KhGfk2OaUz3D9WcAqyLiNhAcB6ojhebj9lyaa1DCQU" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+  <section class="section">
+    <div class="container">
+
+      <!--  ENTREZ DANS LE LIVE -->
+      <div class="columns">
+        <div class="column interaction" onclick="interactionClick()">
+            Cliquer ici pour entrer dans le live
+            <!-- ## TODO : mettre un gros bouton, à la charte -->
+        </div>
+        <div class="column">
+          Second column
+        </div>
+        <div class="column">
+          Third column
+        </div>
+        <div class="column">
+          Fourth column
+        </div>
+      </div>
+      <!--  TITRE / SOUS TIRE -->
+      <div class="columns">
+        <div class="column interaction" onclick="interactionClick()">
+            Cliquer ici pour entrer dans le live
+            <!-- ## TODO : mettre un gros bouton, à la charte -->
+        </div>
+        <div class="column">
+          <h1 class="title">
+            Doctothon Live - bientôt
+          </h1>
+          <p class="subtitle">
+            My first website with <strong>Bulma</strong>!
+          </p>
+        </div>
+      </div>
+
+
+      <!--  ANNONCES -->
+      <div class="columns annonce">
+
+        <div class="column">
+          <!-- TODO : remplacer le contenu par la page d'annonce, à la charte -->
+
+          <h2>Diffusion le {!LiveStartDate}</h2>
+          <h3>Multi-diffusion</h3>
+          ici
+          <ul>
+            <li class="lien livestream">sur <a href="https://www.twitch.tv/doctothon">https://www.twitch.tv/doctothon</a></li>
+            <li class="lien livestream"><br /> sur <a href="https://crowdbunker.com/@doctothon">https://crowdbunker.com/@doctothon</a></li>
+            <li class="lien livestream">sur <a href="https://twitter.com/doctothon_live">https://twitter.com/doctothon_live</a></li>
+            <li class="lien livestream">sur <a href="https://www.facebook.com/doctothon">https://www.facebook.com/doctothon</a></li>
+          </ul>
+
+        </div>
+
+      </div>
+
+      <!--  ENTREZ DANS LE LIVE -->
+      <div class="columns">
+        <div class="column interaction" onclick="interactionClick()">
+            Cliquer ici pour entrer dans le live
+            <!-- ## TODO : mettre un gros bouton, à la charte -->
+        </div>
+        <div class="column">
+          Second column
+        </div>
+        <div class="column">
+          Third column
+        </div>
+        <div class="column">
+          Fourth column
+        </div>
+      </div>
+
+      <!--  sss -->
+      <div class="columns">
+        <div class="column">
+          First column
+        </div>
+        <div class="column">
+          Second column
+        </div>
+        <div class="column">
+          Third column
+        </div>
+        <div class="column">
+          Fourth column
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+
+
+
+  <section class="section is-full-height content">
+
+    <div class="container">
+
+
+      <!-- <div id="annonce" class="annonce"> -->
+      <div class="annonce">
+        <!-- TODO : remplacer le contenu par la page d'annonce, à la charte -->
+        <h1>Doctothon Live - bientôt</h1>
+        <h2>Diffusion le {!LiveStartDate}</h2>
+        <h3>Multi-diffusion</h3>
+        ici
+        <br />sur <a href="https://www.twitch.tv/doctothon">https://www.twitch.tv/doctothon</a>
+        <!-- ## ajouter youtube -->
+        <!-- ## kid de Odysee ? -->
+        <br /> sur <a href="https://crowdbunker.com/@doctothon">https://crowdbunker.com/@doctothon</a>
+        <br />sur <a href="https://twitter.com/doctothon_live">https://twitter.com/doctothon_live</a>
+        <br />sur <a href="https://www.facebook.com/doctothon">https://www.facebook.com/doctothon</a>
+      </div>
+      <!-- div id="interaction" onclick="interactionClick()"> -->
+      <div class="interaction" onclick="interactionClick()">
+        Cliquer ici pour entrer dans le live
+        <!-- ## TODO : mettre un gros bouton, à la charte -->
+      </div>
+      <!-- <div id="live"> -->
+      <div class="live">
+      </div>
+      <!-- <div id="fin"> -->
+      <div class="fin">
+        <!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
+        <h1>Le Doctothon Spécial Enfants est fini</h1>
+        Retrouvez tous les liens de rediffusion sur <a href="https://doctothon.fr">https://doctothon.fr</a>
+        <br />
+        <img src="https://doctothon.fr/affiche.png" width="80%">
+        <!-- TODO : remplacer le contenu par la page de fin, à la charte -->
+      </div>
+
+      <!-- <div id="mentions"> -->
+      <div class="mentions">
+        <hr />
+        <p /><b>Mentions légales</b>
+        <br />Cookies : ce site n'utilise pas de cookies
+        <!-- vérifier ce point-ci -->
+        <br />Données personnelles : ce site ne collecte et n'utilise pas de données personnelles
+        <p />Hébergeur :
+        <br />GitHub Pages (https://pages.github.com/)
+        <br />GitHub, Inc.
+        <br />88 Colin P. Kelly Jr. Street
+        <br />San Francisco, CA 94107
+        <br />United States
+        <br />+1 (877) 448-4820
+      </div>
+
+    </div>
+  </section>
+</body>
+<script href="js/application.js" />
+</html>

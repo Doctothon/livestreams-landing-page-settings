@@ -1,0 +1,55 @@
+doctype html
+html(lang="en")
+  # HEAD
+  include layouts/partials/head.pug
+  body
+    section(class="section")
+      div(class="container")
+        <!--  NAVBAR -->
+        div(class="columns")
+          div(class="column docto navbar" onclick="interactionClick()")
+            include layouts/partials/navbar/navbar1.pug
+        <!--  ANNONCE -->
+        <!-- <div id="annonce" class="annonce"> -->
+        div(class="columns")
+          div(class="column interaction" onclick="interactionClick()")
+            include layouts/partials/main/annonce.pug
+
+        <!--  ENTREZ DANS LE LIVE -->
+        <!-- <div id="annonce" class="annonce"> -->
+        div(class="columns")
+          div(class="column interaction" onclick="interactionClick()")
+            include layouts/partials/main/entrez_livestream.pug
+
+        <!--  ENTREZ DANS LE LIVE -->
+        <!-- div id="interaction" onclick="interactionClick()"> -->
+        div(class="columns")
+          div(class="column" onclick="interactionClick()")
+            include layouts/partials/vvv.pug
+
+
+        <!--  CADRE DU LIVE -->
+        <!-- <div id="live"> -->
+        <!-- div id="interaction" onclick="interactionClick()"> -->
+        div(class="columns")
+          div(class="cadre live column" onclick="interactionClick()")
+            include layouts/partials/cadre_live.pug
+
+
+        <!--  FIN -->
+        <!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
+        div(class="fin columns")
+          div(class="column" onclick="interactionClick()")
+            include layouts/partials/fini.pug
+
+        <!--  TITRE / SOUS TIRE -->
+        <!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
+        div(class="columns")
+          div(class="column" onclick="interactionClick()")
+            include layouts/partials/vvv.pug
+
+
+        <!--  FOOTER -->
+        <!-- <div id="mentions"> -->
+        div(class="mentions legales columns")
+          include layouts/partials/footer.pug

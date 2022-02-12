@@ -1,0 +1,29 @@
+{
+  "name": "essai1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pug": "pug src/ --out ./dist/",
+    "meta": "pug -help",
+    "generate-me": "npm run meta && ./.npm.scripts/meta/generate.me.sh",
+    "dev": "gulp serve",
+    "build": "npm run pug && gulp build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bulma": "^0.9.3",
+    "bulma-start": "^0.0.4"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.27.7",
+    "gulp": "^4.0.2",
+    "gulp-html-beautify": "^1.0.1",
+    "gulp-pug": "^5.0.0",
+    "gulp-sass": "^5.1.0",
+    "pug": "^3.0.2"
+  }
+}
