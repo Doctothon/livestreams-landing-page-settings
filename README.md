@@ -1,4 +1,4 @@
-# The Doctothon Live Lannding Page
+# The Doctothon Live Landing Page
 
 This repository version controls the source of the one pager website served at :
 
