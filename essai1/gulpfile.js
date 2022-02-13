@@ -4,6 +4,7 @@ const browserSync = require('browser-sync').create();
 // const sass = require('gulp-sass')(require('sass'));
 const sass = require('gulp-sass')(require('node-sass'));
 const pug = require('gulp-pug');
+const purgecss = require('gulp-purgecss');
 
 var htmlbeautify = require('gulp-html-beautify');
 
@@ -39,13 +40,24 @@ function gulpPug(){
             verbose: true
           })
         )
-        .pipe(dest('./src/'));
+        .pipe(gulp.dest('./src/'));
         // .pipe(dest('./dist'));
 };
 
 
 gulp.task(gulpSass);
 gulp.task(gulpPug);
+
+
+gulp.task('purgecss', () => {
+    return gulp.src('src/**/*.css')
+        .pipe(purgecss({
+            content: ['src/**/*.html']
+        }))
+        .pipe(gulp.dest('dist/css'))
+})
+
+
 
 /*
 exports.views = () => {
@@ -103,8 +115,9 @@ gulp.task('server', gulp.series('gulpSass', function() {
     });
 
     // gulp.watch('src/js/*.js', gulp.series('jsDev'));
-    gulp.watch('src/sass/*.s?ss', gulp.series('gulpSass'));
     gulp.watch('src/js/*.js', gulp.series('gulpPug'));
+    gulp.watch('src/sass/*.s?ss', gulp.series('gulpSass'));
+    gulp.watch('src/js/*.js', gulp.series('purgecss'));
     gulp.watch('src/js/*.js', gulp.series('jsDist'));
     gulp.watch('src/js/*.js', gulp.series('cssDist'));
     gulp.watch('src/js/*.js', gulp.series('htmlDist'));
@@ -112,8 +125,7 @@ gulp.task('server', gulp.series('gulpSass', function() {
 }));
 
 
-
-gulp.task('serve', gulp.series('gulpSass', 'jsDist', 'cssDist', 'htmlDist', 'server'));
+gulp.task('serve', gulp.series('gulpPug', 'gulpSass', 'purgecss', 'jsDist', 'cssDist', 'htmlDist', 'server'));
 // allDist after gulpPug: any html fiole in the src folder, overrides the rendered pug template in dist
 gulp.task('dev', gulp.series('gulpSass', 'gulpPug', 'jsDist', 'cssDist', 'htmlDist', 'server'));
-gulp.task('build', gulp.series('gulpSass', 'jsDev'));
+gulp.task('build', gulp.series('gulpPug', 'gulpSass', 'purgecss', 'jsDist', 'cssDist', 'htmlDist'));

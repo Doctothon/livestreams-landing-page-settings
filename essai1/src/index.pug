@@ -1,6 +1,6 @@
 doctype html
 html(lang="en")
-  # HEAD
+  <!--  HEAD -->
   include layouts/partials/head.pug
   body
     section(class="section")
@@ -21,13 +21,6 @@ html(lang="en")
           div(class="column interaction" onclick="interactionClick()")
             include layouts/partials/main/entrez_livestream.pug
 
-        <!--  ENTREZ DANS LE LIVE -->
-        <!-- div id="interaction" onclick="interactionClick()"> -->
-        div(class="columns")
-          div(class="column" onclick="interactionClick()")
-            include layouts/partials/vvv.pug
-
-
         <!--  CADRE DU LIVE -->
         <!-- <div id="live"> -->
         <!-- div id="interaction" onclick="interactionClick()"> -->
@@ -36,20 +29,13 @@ html(lang="en")
             include layouts/partials/cadre_live.pug
 
 
-        <!--  FIN -->
+        <!--  EPHEMERE :"[..] Le doctothon enfant est terrminé [..]" -->
         <!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
         div(class="fin columns")
           div(class="column" onclick="interactionClick()")
-            include layouts/partials/fini.pug
-
-        <!--  TITRE / SOUS TIRE -->
-        <!-- ## TODO : remplacer le contenu par la page de fin, à la charte -->
-        div(class="columns")
-          div(class="column" onclick="interactionClick()")
-            include layouts/partials/vvv.pug
+            include layouts/partials/ephemere.pug
 
 
         <!--  FOOTER -->
         <!-- <div id="mentions"> -->
-        div(class="mentions legales columns")
-          include layouts/partials/footer.pug
+        include layouts/partials/footer.pug

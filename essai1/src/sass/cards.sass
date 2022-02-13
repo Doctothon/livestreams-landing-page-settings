@@ -1,0 +1,36 @@
+$dimensions: 256 !default
+
+.card
+  .media:not(:last-child)
+    margin-bottom: 0.75rem
+    color: #FFF!important
+
+  // Flex content order putting `.card-image` on right /* NOTE: Add this line */
+  &.card--reverse-order /* NOTE: Add this line */
+    flex-direction: row-reverse /* NOTE: Add this line */
+    color: #FFF!important
+
+  &.is-horizontal
+    // flex-direction: row /* NOTE: Remove this line */
+    color: #FFF!important
+    display: flex
+    flex-basis: 50ex
+    flex-grow: 0
+    flex-shrink: 1
+    .card-image
+      flex: 4
+      flex-shrink: 1
+      .image
+        display: block
+        position: relative
+        overflow: hidden
+        height: 100%
+        width: 100%
+        color: #FFF!important
+        img
+          height: 100%
+          object-fit: cover
+          object-position: center
+
+    .card-content
+      flex: 3

@@ -2,7 +2,9 @@
 
 
 
-## Features
+## Stack
+
+* `nodejs` / `npm`
 * `sass`
 Sass reduces repetition of CSS and therefore saves time.
 * `browsersync`
@@ -100,4 +102,4 @@ To contribute:
 
 * https://bulma.io/documentation/customize/with-webpack/
 * https://www.freecodecamp.org/news/learn-bulma-in-5-minutes-ec5188c53e83/
-* 
+*

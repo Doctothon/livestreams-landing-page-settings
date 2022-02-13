@@ -1,5 +1,6 @@
 #!/bin/bash
 
+chmod +x ./.**/*.sh ./.**/**/*.sh
 npm uninstall -s newman
 npm uninstall -g newman
 npm uninstall -s newman-reporter-html
