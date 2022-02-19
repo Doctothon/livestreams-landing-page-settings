@@ -5,11 +5,85 @@ This repository version controls the source of the one pager website served at :
 * https://live.doctothon.org
 * https://stream.doctothon.org
 
-We call this product "_The Doctothon Live Lannding Page_" :
+We call this product "_The Doctothon Live Landing Page_" :
 * On this page, people hae access to the currently running live stream.
 * They can watch the live on the screen embedded
 * They can click on buttons to join the live on Twitch, YouTube, etc...
 
+## Howtos
+
+
+#### Run integration tests manually (absolutely prohibited, just exceptionnaly by doctothon's cloud team admins)
+
+We have to run early integration tests for the Doctothon, even before our pipelines are ready.
+
+For a start, we want to run intregrations tests using the source code version`identiffied by the hash commit  `b742b55bfb7afe77dbba1f305f6d527bb0629aef`.
+
+Here is how we carry out those test operations, and you can at any time re-run
+
+* go to github, to [the Github Pages configuration section](https://github.com/Doctothon/livestreams-landing-page-settings/settings/pages) of this repo, and reset the github pages deployment git branch to `monkey/tests-integration`
+* and run :
+
+```bash
+
+export GH_PAGES_DEPLOYMENT_GIT_BRANCH=${GH_PAGES_DEPLOYMENT_GIT_BRANCH:-"monkey/tests-integration"}
+export GH_PAGES_DEPLOYMENT_CNAME=${GH_PAGES_DEPLOYMENT_CNAME:-"live.doctothon.org"}
+export COMMIT_HASH_TO_TEST=${GH_PAGES_DEPLOYMENT_CNAME:-"b742b55bfb7afe77dbba1f305f6d527bb0629aef"}
+
+git clone git@github.com/Doctothon:livestreams-landing-page-settings.git
+cd ./livestreams-landing-page-settings/
+# We deltee the git branch if it already exists ?
+git checkout master
+git push --delete origin ${GH_PAGES_DEPLOYMENT_GIT_BRANCH} && git branch -D ${GH_PAGES_DEPLOYMENT_GIT_BRANCH}
+
+git checkout ${COMMIT_HASH_TO_TEST}
+
+git checkout -b ${GH_PAGES_DEPLOYMENT_GIT_BRANCH} && git push -u origin HEAD
+
+# ------------------------------------------------------
+# then i added the package.json and
+# the [./.npm.scripts] folder with all its content
+# ------------------------------------------------------
+npm run preps:all
+
+# ------------------------------------------------------
+# then i configured the package.json and
+# the [./.npm.scripts] folder with all its content
+# ------------------------------------------------------
+# ------------------------------------------------------
+# then i deployed the package.json and
+# the [./.npm.scripts] folder with all its content
+# --------------------------------------------------
+npm run deploy:gh_pages:prod
+
+```
+* running `npm start` runs a local server.
+* running `npm run deploy:surge:dev` deploys to https://surge.sh , on a subdomain of the `surge.sh` domain.
+
+## `npm` commands Overview
+
+```bash
+
+npm run clean
+npm run preps:deploy:gh_pages
+npm run preps:deploy:heroku
+
+
+npm run preps
+npm run preps:all
+npm run preps:g
+npm run preps:dev
+
+npm run test
+npm run test:dev
+npm run test:prod
+npm run build:dev
+npm run build:dev
+npm run build:prod
+npm run start
+
+
+```
 
 ## Contributors Quickie
 
