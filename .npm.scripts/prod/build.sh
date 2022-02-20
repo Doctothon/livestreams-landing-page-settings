@@ -48,9 +48,12 @@ if [ -d dist/ ]; then
 fi;
 mkdir -p dist/
 
+
 cp ./*.html dist/
 cp ./*.css dist/
 cp ./config.json dist/
+cp ./affiche-*.jpg dist/
+cp ./favicon.ico dist/
 
 # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- #
 # -- 3./ then will generate the CNAME file into the dist folder
