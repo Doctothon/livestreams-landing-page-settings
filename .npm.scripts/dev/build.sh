@@ -47,7 +47,7 @@ mkdir -p dist/
 cp ./*.html dist/
 cp ./*.css dist/
 cp ./config.json dist/
-
+cp ./*.jpg dist/
 # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- #
 # -- 3./ then will generate the CNAME file into the dist folder
 # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- # -- #

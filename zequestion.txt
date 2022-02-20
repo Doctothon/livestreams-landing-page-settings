@@ -9,7 +9,7 @@ Do you confirm you want to deploy to Github Pages :
   ? (y/n)
 
 # --- *
-# --- * (Info: the current git commit is [b4409a3e2d6ca70b8182483a89d7032ebcb44078] )
+# --- * (Info: the current git commit is [4cece60a2631e2672224ecc917b945f2216a6b70] )
 # --- * (Info: the current git branch is [monkey/tests-integration] )
 # --- *
 # --- * --- * --- * --- * --- * --- * --- * --- * --- * --- * --- #
