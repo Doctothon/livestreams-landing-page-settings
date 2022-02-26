@@ -7,9 +7,34 @@
 <meta property="og:description" content="Diffusion en Live du Doctothon.">
 <title>Doctothon</title>
 <style type="text/css">
-body{margin:0}
+/* noto-sans-regular - latin */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('fonts/noto-sans-v25-latin-regular.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('fonts/noto-sans-v25-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('fonts/noto-sans-v25-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('fonts/noto-sans-v25-latin-regular.woff') format('woff'), /* Modern Browsers */
+       url('fonts/noto-sans-v25-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('fonts/noto-sans-v25-latin-regular.svg#NotoSans') format('svg'); /* Legacy iOS */
+}
+body{margin:0;
+	font-family: 'Noto Sans', sans-serif;
+}
 #annonce,#fin,#interaction,#live{
-display:none;
+	display:none;
+}
+h1{
+	background-color:#FFF45E;
+	color:black;
+}
+#interaction{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 40vh;
 }
 </style>
 </head>
@@ -18,18 +43,19 @@ display:none;
 	<!-- TODO : remplacer le contenu par la page d'annonce, à la charte -->
 	<h1>"... ça va bien se passer"</h1>
 	<h2>Diffusion le {!LiveStartDate}</h2>
-	<center><img src="affiche-20220222.jpg" width="80%"></center>
+	<center><img src="affiche-20220301.jpg" width="80%"></center>
 	<h3>Multi-diffusion</h3>
 	ici ou
 	<br/>sur <a href="https://www.twitch.tv/doctothon">https://www.twitch.tv/doctothon</a>
 	<br/>sur <a href="https://www.youtube.com/channel/UCv7oKZRI2A4uaK7eAbEYIYw">https://www.youtube.com/channel/UCv7oKZRI2A4uaK7eAbEYIYw</a>
 <!--	<br/>sur <a href="https://odysee.com/@DOCTOTHON:2">https://odysee.com/@DOCTOTHON:2</a>	-->
 	<br/>sur <a href="https://twitter.com/doctothon_live">https://twitter.com/doctothon_live</a>
-	<br/>sur <a href="https://www.facebook.com/groups/1910704149126814">https://www.facebook.com/groups/1910704149126814</a>
+	<br/>sur <a href="https://www.facebook.com/doctothon">https://www.facebook.com/doctothon</a>
 <!--	<br/> sur <a href="https://crowdbunker.com/channel/yDSMNLuN">https://crowdbunker.com/channel/yDSMNLuN</a> (après diffusion) -->
 </div>
-<div id="interaction" onclick="interactionClick()">Cliquer ici pour entrer dans le live
+<div id="interaction" >
 	<!-- ## TODO : mettre un gros bouton, à la charte -->
+	<button onclick="interactionClick()" style="background-color:#FFF45E;color:black;">Cliquer ici pour entrer dans le live</button>
 </div>    
 <div id="live">
 </div>
@@ -38,7 +64,7 @@ display:none;
 	<h1>L'émission "...ça va bien se passer" est finie</h1>
 	Retrouvez tous les liens de rediffusion sur <a href="https://doctothon.org">https://doctothon.org</a>
 	<br/><br/>
-	<center><img src="affiche-20220222.jpg" width="80%"></center>
+	<center><img src="affiche-20220301.jpg" width="80%"></center>
 	<!-- TODO : remplacer le contenu par la page de fin, à la charte -->
 </div>
 
@@ -183,6 +209,7 @@ function displayIntro(){
 }
 function displayLive(){
 	document.getElementById('annonce').style.display="none";
+	document.getElementById('interaction').innerHTML='';
 	document.getElementById('interaction').style.display="none";
 	document.getElementById('live').style.display="block";
 	document.getElementById('fin').style.display="none";
